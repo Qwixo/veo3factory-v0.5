@@ -87,11 +87,13 @@ const error = validateParameters(
     }
 
     // Always do guest checkout - create customer without user association
-    const newCustomer = await stripe.customers.create({
-      metadata: {
-        guest_checkout: 'true',
-      },
-    });
+const newCustomer = await stripe.customers.create({
+  email: customer_email,
+  metadata: {
+    guest_checkout: 'true',
+  },
+});
+
     const customerId = newCustomer.id;
     
     console.log(`Created guest customer ${customerId}`);
