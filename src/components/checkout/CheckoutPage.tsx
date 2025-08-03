@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield, Zap, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Shield, Zap, CheckCircle, Mail, Lock } from 'lucide-react';
 import { STRIPE_CONFIG, getStripeProductConfig } from '../../stripe-config';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -8,6 +8,10 @@ import { supabase } from '../../lib/supabase';
 export function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showAccountForm, setShowAccountForm] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   
@@ -20,36 +24,86 @@ export function CheckoutPage() {
     }
   }, [user, navigate]);
 
-  const handlePurchase = async () => {
-    if (!user) {
-      navigate('/signup');
-      return;
-    }
-
+  const createAccountAndPurchase = async () => {
     setLoading(true);
     setError('');
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        setError('Please sign in to continue');
+    // Validate form if creating new account
+    if (!user && showAccountForm) {
+      if (!email || !password || !confirmPassword) {
+        setError('Please fill in all fields');
         setLoading(false);
         return;
+      }
+      
+      if (password !== confirmPassword) {
+        setError('Passwords do not match');
+        setLoading(false);
+        return;
+      }
+      
+      if (password.length < 6) {
+        setError('Password must be at least 6 characters');
+        setLoading(false);
+        return;
+      }
+    }
+
+    try {
+      let session;
+      
+      if (!user && showAccountForm) {
+        // Create new account
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: undefined // Disable email confirmation
+          }
+        });
+        
+        if (signUpError) {
+          setError(signUpError.message);
+          setLoading(false);
+          return;
+        }
+        
+        session = data.session;
+      } else if (user) {
+        // Use existing session
+        const { data } = await supabase.auth.getSession();
+        session = data.session;
+      } else {
+        // Guest checkout - no session needed
+        session = null;
+      }
+
+      // Prepare checkout data
+      const checkoutData = {
+        price_id: product.priceId,
+        success_url: `${window.location.origin}/success`,
+        cancel_url: `${window.location.origin}/checkout`,
+        mode: product.mode,
+      };
+
+      // Add customer email for guest checkout
+      if (!session && email) {
+        checkoutData.customer_email = email;
+      }
+
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if we have a session
+      if (session) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          price_id: product.priceId,
-          success_url: `${window.location.origin}/success`,
-          cancel_url: `${window.location.origin}/checkout`,
-          mode: product.mode,
-        }),
+        headers,
+        body: JSON.stringify(checkoutData),
       });
 
       const data = await response.json();
@@ -68,6 +122,16 @@ export function CheckoutPage() {
       setError(error.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePurchase = () => {
+    if (user) {
+      // User is already logged in, proceed directly
+      createAccountAndPurchase();
+    } else {
+      // Show account creation form
+      setShowAccountForm(true);
     }
   };
 
@@ -172,6 +236,68 @@ export function CheckoutPage() {
                   </div>
                 )}
 
+                {/* Account Creation Form */}
+                {!user && showAccountForm && (
+                  <div className="mb-6 p-4 bg-gray-800 border border-gray-600 rounded-lg">
+                    <h3 className="text-lg font-semibold text-white mb-4">Create Your Account</h3>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Email Address
+                        </label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                          <input
+                            type="email"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                            placeholder="Enter your email"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Password
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                          <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                            placeholder="Enter your password"
+                            required
+                            minLength={6}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                          Confirm Password
+                        </label>
+                        <div className="relative">
+                          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                          <input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400 focus:ring-1 focus:ring-yellow-400"
+                            placeholder="Confirm your password"
+                            required
+                            minLength={6}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Checkout Button */}
                 <button
                   onClick={handlePurchase}
@@ -179,7 +305,7 @@ export function CheckoutPage() {
                   className="checkout-button w-full"
                 >
                   <span className="button-text">
-                    {loading ? 'Processing...' : `COMPLETE PURCHASE - $${product.price / 100}`}
+                    {loading ? 'Processing...' : showAccountForm && !user ? 'CREATE ACCOUNT & PAY' : `COMPLETE PURCHASE - $${product.price / 100}`}
                   </span>
                   <span className="button-subtext">
                     {user ? 'Secure payment with Stripe' : 'Create account & pay'}
@@ -187,6 +313,16 @@ export function CheckoutPage() {
                 </button>
 
                 {/* Auth Links */}
+                {!user && !showAccountForm && (
+                  <div className="text-center mb-4">
+                    <p className="text-gray-400 text-sm mb-2">
+                      Already have an account?{' '}
+                      <Link to="/login" className="text-yellow-400 hover:text-yellow-300">
+                        Sign in first
+                      </Link>
+                    </p>
+                  </div>
+                )}
                 {!user && (
                   <div className="text-center mb-4">
                     <p className="text-gray-400 text-sm mb-2">
