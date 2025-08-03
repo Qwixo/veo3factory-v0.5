@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Shield, Zap } from 'lucide-react';
-import { createCheckoutSession } from '../../lib/stripe';
 import { getMainProduct } from '../../stripe-config';
 
 export function Checkout() {
