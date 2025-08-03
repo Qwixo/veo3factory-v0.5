@@ -4,7 +4,7 @@ import { ArrowLeft, Shield, Zap, CheckCircle } from 'lucide-react';
 import { STRIPE_CONFIG, getStripeProductConfig } from '../../stripe-config';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
-import '../../checkout-styles.css';
+import '/checkout-styles.css';
 
 export function CheckoutPage() {
   const [loading, setLoading] = useState(false);
