@@ -1,82 +1,74 @@
 import React, { useState, useEffect } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Shield, Zap, CheckCircle } from 'lucide-react';
 import { STRIPE_CONFIG, getStripeProductConfig } from '../../stripe-config';
 import { useAuth } from '../../contexts/AuthContext';
-import { AuthModal } from '../auth/AuthModal';
-
-const stripePromise = loadStripe(STRIPE_CONFIG.publishableKey);
+import { supabase } from '../../lib/supabase';
 
 export function CheckoutPage() {
   const [loading, setLoading] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
+  const [error, setError] = useState('');
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const product = getStripeProductConfig();
 
   useEffect(() => {
     // If user is already logged in and has active subscription, redirect to dashboard
     if (user?.subscription_status === 'active') {
-      window.location.href = '/dashboard';
+      navigate('/dashboard');
     }
-  }, [user]);
+  }, [user, navigate]);
 
   const handlePurchase = async () => {
     if (!user) {
-      setShowAuthModal(true);
+      navigate('/signup');
       return;
     }
 
     setLoading(true);
+    setError('');
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`, {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        setError('Please sign in to continue');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          priceId: product.priceId,
-          userId: user.id,
-          userEmail: user.email,
+          price_id: product.priceId,
+          success_url: `${window.location.origin}/success`,
+          cancel_url: `${window.location.origin}/checkout`,
+          mode: product.mode,
         }),
       });
 
-      const { sessionId, error } = await response.json();
+      const data = await response.json();
 
-      if (error) {
-        throw new Error(error);
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
       }
 
-      const stripe = await stripePromise;
-      if (!stripe) {
-        throw new Error('Stripe failed to load');
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL received');
       }
-
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId,
-      });
-
-      if (stripeError) {
-        throw new Error(stripeError.message);
-      }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating checkout session:', error);
-      alert('Something went wrong. Please try again.');
+      setError(error.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleAuthSuccess = () => {
-    setShowAuthModal(false);
-    // After successful auth, automatically trigger purchase
-    setTimeout(() => {
-      handlePurchase();
-    }, 500);
   };
 
   return (
@@ -135,7 +127,7 @@ export function CheckoutPage() {
               <div className="pricing-card">
                 <div className="pricing-breakdown">
                   <div className="price-row">
-                    <span>Veo3Factory</span>
+                    <span>{product.name}</span>
                     <span className="original-price">$650</span>
                   </div>
                   <div className="price-row discount">
@@ -168,8 +160,15 @@ export function CheckoutPage() {
                 ) : (
                   <div className="mb-4 p-3 bg-blue-900 border border-blue-600 rounded-lg">
                     <p className="text-blue-200 text-sm">
-                      You'll create an account during checkout
+                      You'll need to create an account to purchase
                     </p>
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {error && (
+                  <div className="mb-4 p-3 bg-red-900 border border-red-600 rounded-lg">
+                    <p className="text-red-200 text-sm">{error}</p>
                   </div>
                 )}
 
@@ -186,6 +185,18 @@ export function CheckoutPage() {
                     {user ? 'Secure payment with Stripe' : 'Create account & pay'}
                   </span>
                 </button>
+
+                {/* Auth Links */}
+                {!user && (
+                  <div className="text-center mb-4">
+                    <p className="text-gray-400 text-sm mb-2">
+                      Already have an account?{' '}
+                      <Link to="/login" className="text-yellow-400 hover:text-yellow-300">
+                        Sign in
+                      </Link>
+                    </p>
+                  </div>
+                )}
 
                 {/* Trust Signals */}
                 <div className="trust-signals">
@@ -206,7 +217,7 @@ export function CheckoutPage() {
         {/* Footer */}
         <footer className="checkout-footer">
           <div className="container">
-            <p>&copy; 2025 Viral Reels Factory. All rights reserved.</p>
+            <p>&copy; 2025 Veo3Factory. All rights reserved.</p>
             <div className="footer-links">
               <a href="/privacy-policy.html">Privacy Policy</a>
               <a href="/cookie-policy.html">Cookie Policy</a>
@@ -216,13 +227,6 @@ export function CheckoutPage() {
           </div>
         </footer>
       </div>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        initialMode={authMode}
-      />
     </div>
   );
 }

@@ -1,15 +1,14 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { AuthModal } from './auth/AuthModal';
+import { Link } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requiresPayment?: boolean;
 }
 
-export function ProtectedRoute({ children, requiresPayment = true }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, requiresPayment = false }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
-  const [showAuthModal, setShowAuthModal] = React.useState(false);
 
   if (loading) {
     return (
@@ -30,16 +29,20 @@ export function ProtectedRoute({ children, requiresPayment = true }: ProtectedRo
           <p className="text-gray-300 mb-6">
             You need to sign in to access this content.
           </p>
-          <button
-            onClick={() => setShowAuthModal(true)}
-            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold py-3 px-6 rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all duration-200"
-          >
-            Sign In
-          </button>
-          <AuthModal
-            isOpen={showAuthModal}
-            onClose={() => setShowAuthModal(false)}
-          />
+          <div className="space-y-3">
+            <Link
+              to="/login"
+              className="block bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold py-3 px-6 rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all duration-200"
+            >
+              Sign In
+            </Link>
+            <Link
+              to="/signup"
+              className="block bg-gray-800 text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-700 transition-all duration-200"
+            >
+              Create Account
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -51,14 +54,14 @@ export function ProtectedRoute({ children, requiresPayment = true }: ProtectedRo
         <div className="text-center max-w-md mx-auto p-6">
           <h2 className="text-2xl font-bold text-yellow-400 mb-4">Payment Required</h2>
           <p className="text-gray-300 mb-6">
-            You need to purchase the Veo3Factory pack to access the dashboard.
+            You need to purchase the Veo3Factory pack to access this content.
           </p>
-          <a
-            href="/checkout"
+          <Link
+            to="/checkout"
             className="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 text-black font-bold py-3 px-6 rounded-lg hover:from-yellow-500 hover:to-orange-600 transition-all duration-200"
           >
             Purchase Now - $97
-          </a>
+          </Link>
         </div>
       </div>
     );

@@ -4,7 +4,8 @@ import { supabase } from '../lib/supabase';
 interface User {
   id: string;
   email: string;
-  subscription_status: 'active' | 'inactive' | 'pending';
+  subscription_status?: string;
+  subscription_plan?: string;
 }
 
 interface AuthContextType {
@@ -29,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        await fetchUserData(session.user.id);
+        await fetchUserData(session.user.id, session.user.email!);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        await fetchUserData(session.user.id);
+        await fetchUserData(session.user.id, session.user.email!);
       }
     } catch (error) {
       console.error('Error checking user:', error);
@@ -52,18 +53,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const fetchUserData = async (userId: string) => {
+  const fetchUserData = async (userId: string, email: string) => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      // Fetch subscription data using the view
+      const { data: subscription, error } = await supabase
+        .from('stripe_user_subscriptions')
+        .select('subscription_status, price_id')
+        .maybeSingle();
 
-      if (error) throw error;
-      setUser(data);
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching subscription data:', error);
+      }
+
+      // Map subscription status and plan
+      let subscriptionStatus = 'inactive';
+      let subscriptionPlan = null;
+
+      if (subscription) {
+        subscriptionStatus = subscription.subscription_status === 'active' ? 'active' : 'inactive';
+        
+        // Map price_id to plan name
+        if (subscription.price_id === 'price_1Rq70a1fqfaGAxK3iuKHpUZ7') {
+          subscriptionPlan = 'Veo3Factory';
+        }
+      }
+
+      setUser({
+        id: userId,
+        email,
+        subscription_status: subscriptionStatus,
+        subscription_plan: subscriptionPlan
+      });
     } catch (error) {
       console.error('Error fetching user data:', error);
+      // Set basic user data even if subscription fetch fails
+      setUser({
+        id: userId,
+        email,
+        subscription_status: 'inactive'
+      });
     }
   };
 
@@ -83,28 +111,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: undefined // Disable email confirmation
+        }
       });
 
       if (error) return { error: error.message };
-
-      // Create user record in our users table
-      if (data.user) {
-        const { error: insertError } = await supabase
-          .from('users')
-          .insert({
-            id: data.user.id,
-            email: data.user.email!,
-            subscription_status: 'pending'
-          });
-
-        if (insertError) {
-          console.error('Error creating user record:', insertError);
-        }
-      }
-
       return {};
     } catch (error) {
       return { error: 'An unexpected error occurred' };
@@ -119,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
-      await fetchUserData(session.user.id);
+      await fetchUserData(session.user.id, session.user.email!);
     }
   };
 
