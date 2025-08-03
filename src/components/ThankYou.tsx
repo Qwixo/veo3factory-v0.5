@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle, ArrowRight, Home, Mail, Download } from 'lucide-react';
 
-export function SuccessPage() {
+export function ThankYou() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
   const product = getMainProduct();
