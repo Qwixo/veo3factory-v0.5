@@ -6,32 +6,23 @@ import { useAuth } from '../contexts/AuthContext';
 export function SuccessPage() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [guestCheckout, setGuestCheckout] = useState(false);
 
   useEffect(() => {
-    // Refresh user data to get updated subscription status
+    // Simple loading delay for payment processing
     const refreshData = async () => {
       if (sessionId) {
-        // Check if this was a guest checkout
-        const isGuest = !user;
-        setGuestCheckout(isGuest);
-        
-        // Wait a moment for webhook to process
         setTimeout(async () => {
-          if (!isGuest) {
-            await refreshUser();
-          }
           setLoading(false);
-        }, isGuest ? 5000 : 3000); // Wait longer for guest checkouts
+        }, 3000); // Wait for webhook to process
       } else {
         setLoading(false);
       }
     };
 
     refreshData();
-  }, [sessionId, refreshUser]);
+  }, [sessionId]);
 
   if (loading) {
     return (
@@ -67,51 +58,32 @@ export function SuccessPage() {
               
               <div className="thank-you-content">
                 <p className="main-message">
-                  Welcome to <strong>Veo3Factory</strong>! Your automation system is ready to use.
-                </p>
-                
-                {guestCheckout && (
-                  <div className="bg-blue-900 border border-blue-600 rounded-lg p-4 mb-6">
-                    <p className="text-blue-200">
-                      <strong>Account Created:</strong> We've created an account for you. Check your email for login instructions.
-                    </p>
-                  </div>
-                )}
-                
-                <p className="main-message">
+                  Thank you for your purchase of <strong>Veo3Factory</strong>!
                 </p>
                 
                 <div className="bg-green-900 border border-green-600 rounded-lg p-4 mb-6">
                   <p className="text-green-200">
                     ✓ Your payment has been processed<br />
-                    ✓ Access to the automation system<br />
-                    ✓ Setup guides and resources available
+                    ✓ You will receive your automation system files via email<br />
+                    ✓ Setup guides and resources included
                   </p>
                 </div>
                 
                 <p className="contact-message">
-                  You will receive an email with detailed setup instructions within the next few minutes. 
+                  You will receive an email with your Veo3Factory automation system and detailed setup instructions within the next few minutes. 
                   Please check your <strong>SPAM</strong> and <strong>PROMOTIONS</strong> folder just in case.
                 </p>
               </div>
               
               {/* Action Buttons */}
               <div className="space-y-4">
-                {user ? <Link
-                  to="/dashboard"
+                <Link
+                  to="/"
                   className="back-home-button flex items-center justify-center space-x-2"
                 >
-                  <span>Access Your Dashboard</span>
+                  <span>Back to Home</span>
                   <ArrowRight className="w-5 h-5" />
-                </Link> : (
-                  <Link
-                    to="/login"
-                    className="back-home-button flex items-center justify-center space-x-2"
-                  >
-                    <span>Sign In to Your Account</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </Link>
-                )}
+                </Link>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button className="flex items-center justify-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors">
@@ -129,8 +101,8 @@ export function SuccessPage() {
               <div className="mt-6 p-4 bg-blue-900 border border-blue-600 rounded-lg">
                 <p className="text-blue-200 text-sm">
                   <strong>Need help?</strong> Contact us at{' '}
-                  <a href="mailto:support@veo3factory.com" className="text-blue-300 hover:text-blue-100 underline">
-                    support@veo3factory.com
+                  <a href="mailto:jan@veo3factory.com" className="text-blue-300 hover:text-blue-100 underline">
+                    jan@veo3factory.com
                   </a>
                 </p>
               </div>
