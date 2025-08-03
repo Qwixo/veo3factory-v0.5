@@ -5,7 +5,6 @@ import { CheckCircle, ArrowRight, Home, Mail, Download } from 'lucide-react';
 export function ThankYou() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const product = getMainProduct();
 
   return (
     <div className="min-h-screen bg-black">
