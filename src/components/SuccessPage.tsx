@@ -8,16 +8,23 @@ export function SuccessPage() {
   const sessionId = searchParams.get('session_id');
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [guestCheckout, setGuestCheckout] = useState(false);
 
   useEffect(() => {
     // Refresh user data to get updated subscription status
     const refreshData = async () => {
       if (sessionId) {
+        // Check if this was a guest checkout
+        const isGuest = !user;
+        setGuestCheckout(isGuest);
+        
         // Wait a moment for webhook to process
         setTimeout(async () => {
-          await refreshUser();
+          if (!isGuest) {
+            await refreshUser();
+          }
           setLoading(false);
-        }, 3000);
+        }, isGuest ? 5000 : 3000); // Wait longer for guest checkouts
       } else {
         setLoading(false);
       }
@@ -63,6 +70,17 @@ export function SuccessPage() {
                   Welcome to <strong>Veo3Factory</strong>! Your automation system is ready to use.
                 </p>
                 
+                {guestCheckout && (
+                  <div className="bg-blue-900 border border-blue-600 rounded-lg p-4 mb-6">
+                    <p className="text-blue-200">
+                      <strong>Account Created:</strong> We've created an account for you. Check your email for login instructions.
+                    </p>
+                  </div>
+                )}
+                
+                <p className="main-message">
+                </p>
+                
                 <div className="bg-green-900 border border-green-600 rounded-lg p-4 mb-6">
                   <p className="text-green-200">
                     ✓ Your payment has been processed<br />
@@ -79,13 +97,21 @@ export function SuccessPage() {
               
               {/* Action Buttons */}
               <div className="space-y-4">
-                <Link
+                {user ? <Link
                   to="/dashboard"
                   className="back-home-button flex items-center justify-center space-x-2"
                 >
                   <span>Access Your Dashboard</span>
                   <ArrowRight className="w-5 h-5" />
-                </Link>
+                </Link> : (
+                  <Link
+                    to="/login"
+                    className="back-home-button flex items-center justify-center space-x-2"
+                  >
+                    <span>Sign In to Your Account</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
+                )}
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <button className="flex items-center justify-center space-x-2 bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors">

@@ -104,6 +104,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   console.log(`Processing checkout session completed: ${session.id}`);
 
   try {
+    // Handle guest checkout - create user account if needed
+    if (session.metadata?.guest_checkout === 'true' && session.metadata?.should_create_user === 'true') {
+      await handleGuestCheckout(session);
+    }
+
     if (session.mode === 'payment') {
       // Handle one-time payment
       await handleOneTimePayment(session);
@@ -114,6 +119,50 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   } catch (error) {
     console.error('Error handling checkout session completed:', error);
     throw error;
+  }
+}
+
+async function handleGuestCheckout(session: Stripe.Checkout.Session) {
+  const checkoutEmail = session.metadata?.checkout_email;
+  const customerId = session.customer as string;
+
+  if (!checkoutEmail) {
+    console.error('No checkout email found for guest checkout');
+    return;
+  }
+
+  try {
+    // Create a user account with a temporary password
+    const tempPassword = generateTempPassword();
+    
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: checkoutEmail,
+      password: tempPassword,
+      email_confirm: true, // Auto-confirm email
+    });
+
+    if (error) {
+      console.error('Error creating user for guest checkout:', error);
+      return;
+    }
+
+    if (data.user) {
+      // Link the Stripe customer to the new user
+      const { error: linkError } = await supabase
+        .from('stripe_customers')
+        .insert({
+          user_id: data.user.id,
+          customer_id: customerId,
+        });
+
+      if (linkError) {
+        console.error('Error linking customer to user:', linkError);
+      } else {
+        console.log(`Successfully created user ${data.user.id} and linked to customer ${customerId}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error in guest checkout handling:', error);
   }
 }
 
@@ -285,4 +334,14 @@ async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
 
     console.log(`Updated subscription status to past_due for customer ${customerId}`);
   }
+}
+
+function generateTempPassword(): string {
+  // Generate a secure temporary password
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
 }
