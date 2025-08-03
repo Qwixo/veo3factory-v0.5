@@ -6,7 +6,6 @@ export function Checkout() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const veo3Product = getMainProduct();
 
   const handleCheckout = async () => {
     setLoading(true);
