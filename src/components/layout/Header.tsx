@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export function Header() {
-  const product = getMainProduct();
 
   return (
     <header className="bg-gray-900 border-b border-yellow-400 sticky top-0 z-40">
