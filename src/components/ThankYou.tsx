@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle, ArrowRight, Home, Mail, Download } from 'lucide-react';
-import { getMainProduct } from '../../stripe-config';
 
 export function SuccessPage() {
   const [searchParams] = useSearchParams();
