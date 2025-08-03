@@ -11,6 +11,10 @@ export function CheckoutPage() {
   const [error, setError] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+
   
   const product = getStripeProductConfig();
 
@@ -24,15 +28,27 @@ export function CheckoutPage() {
   const handlePurchase = async () => {
     setLoading(true);
     setError('');
+if (!email || !firstName || !lastName) {
+  setError('Please fill in all fields before continuing.');
+  setLoading(false);
+  return;
+}
 
     try {
       // Prepare checkout data for guest checkout
-      const checkoutData = {
-        price_id: product.priceId,
-        success_url: `${window.location.origin}/success`,
-        cancel_url: `${window.location.origin}/checkout`,
-        mode: product.mode,
-      };
+const checkoutData = {
+  price_id: product.priceId,
+  success_url: `${window.location.origin}/success`,
+  cancel_url: `${window.location.origin}/checkout`,
+  mode: product.mode,
+  customer_email: email,
+metadata: {
+  first_name: firstName,
+  last_name: lastName,
+  full_name: `${firstName} ${lastName}`
+}
+};
+
 
       // Always do guest checkout - no authentication required
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout`, {
@@ -148,6 +164,39 @@ export function CheckoutPage() {
                   </div>
                 )}
 
+
+
+
+
+<div className="mb-6 space-y-3">
+  <input
+    type="text"
+    placeholder="First Name"
+    value={firstName}
+    onChange={(e) => setFirstName(e.target.value)}
+    className="w-full p-3 rounded-md bg-gray-900 text-white border border-gray-700 placeholder-gray-400"
+  />
+  <input
+    type="text"
+    placeholder="Last Name"
+    value={lastName}
+    onChange={(e) => setLastName(e.target.value)}
+    className="w-full p-3 rounded-md bg-gray-900 text-white border border-gray-700 placeholder-gray-400"
+  />
+  <input
+    type="email"
+    placeholder="Email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    className="w-full p-3 rounded-md bg-gray-900 text-white border border-gray-700 placeholder-gray-400"
+    required
+  />
+</div>
+
+
+                
+
+                
                 {/* Checkout Button */}
                 <button
                   onClick={handlePurchase}
