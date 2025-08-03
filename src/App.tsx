@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import HomePage from './components/HomePage';
 import { CheckoutPage } from './components/checkout/CheckoutPage';
 import { SuccessPage } from './components/checkout/SuccessPage';
+import { ThankYou } from './components/ThankYou';
+import { Checkout } from './components/Checkout';
+
 
 function App() {
   return (
