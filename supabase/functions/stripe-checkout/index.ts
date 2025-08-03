@@ -70,15 +70,17 @@ Deno.serve(async (req) => {
 
     const { price_id, success_url, cancel_url, mode, customer_email } = await req.json();
 
-    const error = validateParameters(
-      { price_id, success_url, cancel_url, mode },
-      {
-        cancel_url: 'string',
-        price_id: 'string',
-        success_url: 'string',
-        mode: { values: ['payment', 'subscription'] },
-      },
-    );
+const error = validateParameters(
+  { price_id, success_url, cancel_url, mode, customer_email },
+  {
+    cancel_url: 'string',
+    price_id: 'string',
+    success_url: 'string',
+    mode: { values: ['payment', 'subscription'] },
+    customer_email: 'string',
+  },
+);
+
 
     if (error) {
       return corsResponse({ error }, 400);
