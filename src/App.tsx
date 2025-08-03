@@ -10,8 +10,8 @@ function App() {
     <Router>
       <div className="min-h-screen bg-black">
         <Routes>
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/success" element={<SuccessPage />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/success" element={<ThankYou />} />
           <Route path="/" element={<HomePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
