@@ -3,9 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider } from './contexts/AuthContext';
 import HomePage from './components/HomePage';
 import { CheckoutPage } from './components/checkout/CheckoutPage';
-import { Dashboard } from './components/dashboard/Dashboard';
 import { SuccessPage } from './components/SuccessPage';
-import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -16,7 +14,6 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/success" element={<SuccessPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
