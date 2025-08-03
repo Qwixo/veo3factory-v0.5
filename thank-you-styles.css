@@ -1,0 +1,240 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #000000;
+    color: #ffffff;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Yellow Cross */
+.yellow-cross {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+    opacity: 0.8;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.4));
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: block;
+}
+
+.yellow-cross:hover {
+    opacity: 1;
+    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.6));
+    transform: scale(1.05);
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* Main Content */
+.thank-you-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.thank-you-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 0;
+}
+
+.thank-you-card {
+    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+    border: 2px solid #FFD700;
+    border-radius: 24px;
+    padding: 48px;
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(255, 215, 0, 0.1);
+}
+
+.success-icon {
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: center;
+    animation: successPulse 2s ease-in-out;
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.thank-you-title {
+    font-size: 36px;
+    font-weight: 800;
+    color: #FFD700;
+    margin-bottom: 32px;
+    letter-spacing: -0.02em;
+}
+
+.thank-you-content {
+    margin-bottom: 40px;
+}
+
+.main-message {
+    font-size: 18px;
+    color: #e0e0e0;
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.main-message strong {
+    color: #FFD700;
+    font-weight: 700;
+}
+
+.contact-message {
+    font-size: 16px;
+    color: #cccccc;
+    line-height: 1.6;
+}
+
+.contact-email {
+    color: #FFD700;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.contact-email:hover {
+    color: #FFA500;
+    text-decoration: underline;
+}
+
+.back-home-button {
+    display: inline-block;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000000;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 16px;
+    padding: 16px 32px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.back-home-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(255, 215, 0, 0.4);
+}
+
+/* Footer */
+.thank-you-footer {
+    background: #1a1a1a;
+    border-top: 1px solid rgba(255, 215, 0, 0.2);
+    padding: 24px 0;
+    margin-top: auto;
+}
+
+.thank-you-footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.footer-links {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    color: #cccccc;
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #FFD700;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+    }
+    
+    .thank-you-main {
+        padding: 60px 0;
+    }
+    
+    .thank-you-card {
+        padding: 32px 24px;
+    }
+    
+    .thank-you-title {
+        font-size: 28px;
+    }
+    
+    .main-message {
+        font-size: 16px;
+    }
+    
+    .contact-message {
+        font-size: 14px;
+    }
+    
+    .success-icon svg {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .thank-you-footer .container {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .footer-links {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .thank-you-card {
+        padding: 24px 16px;
+    }
+    
+    .thank-you-title {
+        font-size: 24px;
+    }
+    
+    .back-home-button {
+        padding: 14px 28px;
+        font-size: 14px;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
