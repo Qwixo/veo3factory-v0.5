@@ -4,7 +4,7 @@ import { ArrowLeft, CreditCard, Shield, Zap } from 'lucide-react';
 import { createCheckoutSession } from '../../lib/stripe';
 import { getMainProduct } from '../../stripe-config';
 
-export function CheckoutPage() {
+export function Checkout() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
