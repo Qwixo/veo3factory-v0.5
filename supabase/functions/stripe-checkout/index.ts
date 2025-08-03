@@ -33,6 +33,31 @@ function corsResponse(body: string | object | null, status = 200) {
   });
 }
 
+type ExpectedType = 'string' | { values: string[] };
+type Expectations<T> = { [K in keyof T]: ExpectedType };
+
+function validateParameters<T extends Record<string, any>>(values: T, expected: Expectations<T>): string | undefined {
+  for (const parameter in values) {
+    const expectation = expected[parameter];
+    const value = values[parameter];
+
+    if (expectation === 'string') {
+      if (value == null) {
+        return `Missing required parameter ${parameter}`;
+      }
+      if (typeof value !== 'string') {
+        return `Expected parameter ${parameter} to be a string got ${JSON.stringify(value)}`;
+      }
+    } else {
+      if (!expectation.values.includes(value)) {
+        return `Expected parameter ${parameter} to be one of ${expectation.values.join(', ')}`;
+      }
+    }
+  }
+
+  return undefined;
+}
+
 Deno.serve(async (req) => {
   try {
     if (req.method === 'OPTIONS') {
@@ -218,35 +243,3 @@ Deno.serve(async (req) => {
     return corsResponse({ error: error.message }, 500);
   }
 });
-
-// Add customer_email as optional parameter
-function validateParameters<T extends Record<string, any>>(values: T, expected: Expectations<T>): string | undefined {
-  for (const parameter in values) {
-    const expectation = expected[parameter];
-  }
-});
-
-type ExpectedType = 'string' | { values: string[] };
-type Expectations<T> = { [K in keyof T]: ExpectedType };
-
-function validateParameters<T extends Record<string, any>>(values: T, expected: Expectations<T>): string | undefined {
-  for (const parameter in values) {
-    const expectation = expected[parameter];
-    const value = values[parameter];
-
-    if (expectation === 'string') {
-      if (value == null) {
-        return `Missing required parameter ${parameter}`;
-      }
-      if (typeof value !== 'string') {
-        return `Expected parameter ${parameter} to be a string got ${JSON.stringify(value)}`;
-      }
-    } else {
-      if (!expectation.values.includes(value)) {
-        return `Expected parameter ${parameter} to be one of ${expectation.values.join(', ')}`;
-      }
-    }
-  }
-
-  return undefined;
-}
