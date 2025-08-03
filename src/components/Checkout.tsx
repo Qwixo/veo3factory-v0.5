@@ -56,7 +56,6 @@ export function Checkout() {
             {/* Price Card */}
             <div className="bg-gray-800 rounded-xl p-6 mb-8 text-center">
               <h2 className="text-3xl font-bold text-yellow-400 mb-2">Veo3Factory</h2>
-              <p className="text-gray-400 mb-4">{veo3Product.description}</p>
 
               <div className="text-gray-500 text-lg line-through mb-1">$650</div>
               <div className="text-green-400 text-sm mb-1">–$553 (First 100 Members Discount)</div>
