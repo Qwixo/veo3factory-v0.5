@@ -13,10 +13,8 @@ export function Checkout() {
 
     try {
       const { url } = await createCheckoutSession({
-        priceId: veo3Product.priceId,
         successUrl: `${window.location.origin}/success`,
         cancelUrl: window.location.href,
-        mode: veo3Product.mode,
       });
 
       if (url) {
@@ -59,7 +57,6 @@ export function Checkout() {
 
               <div className="text-gray-500 text-lg line-through mb-1">$650</div>
               <div className="text-green-400 text-sm mb-1">–$553 (First 100 Members Discount)</div>
-              <div className="text-5xl font-bold text-yellow-400 mb-2">${veo3Product.price.toFixed(2)}</div>
               <p className="text-gray-400">One-time payment</p>
 
               {/* Scarcity */}
@@ -109,7 +106,6 @@ export function Checkout() {
                   Processing...
                 </div>
               ) : (
-                `Complete Purchase – $${veo3Product.price.toFixed(2)}`
               )}
             </button>
 
